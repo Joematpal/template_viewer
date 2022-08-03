@@ -6,9 +6,9 @@ go run main.go
 ```
 
 ## Viewing
-While running "go run main.go":
-Open preferred browser.
-Visit localhost:8080
+While running "go run main.go":  
+Open preferred browser.  
+Visit localhost:8080  
 
 ## Usage
 In the "Template File Path", place the directory and file name with file extension in this box for where the template resides on your drive in the format:
