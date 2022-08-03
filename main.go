@@ -62,7 +62,6 @@ func main() {
 
 		tmplt, err := template.New("live_template").Parse(string(b))
 		if err != nil {
-
 			serveViewer(w, vt, "", err)
 
 			return
