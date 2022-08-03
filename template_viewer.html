@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+
+<head>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+		#error-message {
+			color: red;
+			border: solid red 2px;
+			width: 100%;
+		}
+	</style>
+	<script>
+		document.addEventListener("DOMContentLoaded", () => {
+			// const errorMessage = document.getElementById("error-message")
+			// if (errorMessage) {
+			// 	errorMessage.remove();
+			// }
+
+			let search = new URLSearchParams(window.location.search);
+			// const rightSide = document.getElementById("right-side")
+			// let error = search.get("error")
+			// if (error) {
+			// 	var errorElement = document.createElement("p");
+			// 	errorElement.id = "error-message"
+			// 	var text = document.createTextNode(error);
+			// 	errorElement.appendChild(text);
+			// 	document.getElementById("error-board").appendChild(errorElement)
+			// }
+
+			const filePathInput = document.getElementById("filePath")
+			const filePath = search.get('filePath');
+			if (filePath) {
+				filePathInput.value = filePath
+			}
+
+
+			const dataInput = document.getElementById("data")
+			const data = search.get("data")
+			if (data) {
+				dataInput.value = data
+			}
+
+			console.log(filePath, data)
+
+			prettyPrint()
+		})
+
+		function prettyPrint() {
+			var ugly = document.getElementById('data').value;
+			var obj = JSON.parse(ugly);
+			var pretty = JSON.stringify(obj, undefined, 4);
+			document.getElementById('data').value = pretty;
+		}
+
+		function stringifyData() {
+			var ugly = document.getElementById('data').value;
+			var obj = JSON.parse(ugly);
+			var pretty = JSON.stringify(obj);
+			document.getElementById('data').value = pretty;
+		}
+	</script>
+</head>
+
+<body>
+	<div style="display:flex; width:100%; height: 100vh;">
+		<div style="display:flex; width:50%; border-right: solid 2px black; flex-direction: column;">
+			%v
+			<div style="margin: 0 auto;">
+				<form action="/" method="GET" style="display: flex; flex-direction: column;" onsubmit="stringifyData()">
+					<label for="filePath">Template File Path</label>
+					<input id="filePath" name="filePath" type="text" />
+					<label for="data">Loadable Data</label>
+					<textarea id="data" name="data" cols=50 rows=10></textarea>
+					<button onclick="prettyPrint()">Pretty Print</button>
+					<button>Submit</button>
+				</form>
+			</div>
+		</div>
+		<div style="display:flex; width:50%;">
+			%s
+		</div>
+	</div>
+</body>
