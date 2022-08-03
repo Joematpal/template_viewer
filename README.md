@@ -1,4 +1,4 @@
-# template_viewer
+# Template Viewer
 
 ## Run Local
 ```
