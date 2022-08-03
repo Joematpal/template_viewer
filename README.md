@@ -5,23 +5,25 @@
 go run main.go
 ```
 
-##Viewing
+## Viewing
 While running "go run main.go":
 Open preferred browser.
 Visit localhost:8080
 
-##Usage
+## Usage
 In the "Template File Path", place the directory and file name with file extension in this box for where the template resides on your drive in the format:
 "<drive letter>/<repo directory>/sai-go-accounts/email/templates/<language>/<template name>.html"
 
 In the "Loadable Data" field, use a JSON payload format to define necessary variables with garbage data so that they are visible in the template. For instance, on line 133 of the "email_forgotpassword.html" template, we find the variables needed: "{{ range $Username, $URL := .Accounts }}"
 
 So in the "Loadable Data" field, we place garbage data for a Username and URL, as needed:
+```
 {
     "Accounts": {
         "testdata@test.com": "www.google.com"
     }
 }
+```
 
-##Tips
+## Tips
 Use the "Inspect" option to see resources failing to load in the template.
