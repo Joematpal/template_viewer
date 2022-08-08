@@ -1,0 +1,9 @@
+github.com/osteele/liquid v1.3.0 h1:TwZNI5Y0K+v0MF6JDSoEeRGeHugV8OTi7GIXfdA91fY=
+github.com/osteele/liquid v1.3.0/go.mod h1:VmzQQHa5v4E0GvGzqccfAfLgMwRk2V+s1QbxYx9dGak=
+github.com/osteele/tuesday v1.0.3 h1:SrCmo6sWwSgnvs1bivmXLvD7Ko9+aJvvkmDjB5G4FTU=
+github.com/osteele/tuesday v1.0.3/go.mod h1:pREKpE+L03UFuR+hiznj3q7j3qB1rUZ4XfKejwWFF2M=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/osteele/liquid.v1 v1.2.4 h1:OioNeCaVyWL1jRXzRqQ2vr4ISBbTgtnYsJeVlToLhBw=
+gopkg.in/osteele/liquid.v1 v1.2.4/go.mod h1:9Bx5f04tf9SVwv3Tcx93dx3WH0EKWmE0Gjd6Dyoc5cs=
+gopkg.in/yaml.v2 v2.4.0 h1:D8xgwECY7CYvx+Y2n4sBz93Jn9JRvxdiyyo8CTfuKaY=
+gopkg.in/yaml.v2 v2.4.0/go.mod h1:RDklbk79AGWmwhnvt/jBztapEOGDOx6ZbXqjP6csGnQ=

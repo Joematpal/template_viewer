@@ -17,15 +17,6 @@ var (
 	re = regexp.MustCompile(`\d%`)
 )
 
-type accounts struct {
-	Accounts []account
-	ToEmail  string
-}
-type account struct {
-	Username string
-	URL      string
-}
-
 func main() {
 	srvr := http.NewServeMux()
 
