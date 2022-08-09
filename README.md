@@ -27,3 +27,18 @@ So in the "Loadable Data" field, we place garbage data for a Username and URL, a
 
 ## Tips
 Use the "Inspect" option to see resources failing to load in the template.
+
+## Running - start --help
+
+```
+NAME:
+   template-viewer start
+
+USAGE:
+   template-viewer start [command options] [arguments...]
+
+OPTIONS:
+   --engine value  (default: empty or `liquid`; default go template or liquid)
+   --host value    (default: "0.0.0.0")
+   --port value    (default: "8080")
+```
