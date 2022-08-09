@@ -8,29 +8,43 @@
 			padding: 0;
 			box-sizing: border-box;
 		}
+
 		#error-message {
 			color: red;
 			border: solid red 2px;
 			width: 100%;
 		}
 	</style>
-	<script>
+	<script type="text/javascript">
+		window.onload = function () {
+			var conn;
+
+			if (window["WebSocket"]) {
+
+				console.log("create ws")
+				conn = new WebSocket("ws://" + document.location.host + "/ws");
+				conn.onclose = function (evt) {
+					console.log('close')
+				};
+				conn.onerror = function (evt) {
+					console.log("error", evt)
+				}
+
+				conn.onmessage = function (evt) {
+					var messages = evt.data;
+
+					console.log("data", messages)
+					window.location.reload()
+				};
+			} else {
+				console.log('websocket not defined')
+			}
+		};
+
 		document.addEventListener("DOMContentLoaded", () => {
-			// const errorMessage = document.getElementById("error-message")
-			// if (errorMessage) {
-			// 	errorMessage.remove();
-			// }
 
 			let search = new URLSearchParams(window.location.search);
-			// const rightSide = document.getElementById("right-side")
-			// let error = search.get("error")
-			// if (error) {
-			// 	var errorElement = document.createElement("p");
-			// 	errorElement.id = "error-message"
-			// 	var text = document.createTextNode(error);
-			// 	errorElement.appendChild(text);
-			// 	document.getElementById("error-board").appendChild(errorElement)
-			// }
+
 
 			const filePathInput = document.getElementById("filePath")
 			const filePath = search.get('filePath');
@@ -81,7 +95,7 @@
 				</form>
 			</div>
 		</div>
-		<div style="display:flex; width:50%;">
+		<div style="width:50%;">
 			%s
 		</div>
 	</div>
