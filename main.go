@@ -67,7 +67,7 @@ func (t *Template[T]) Parse(body string) error {
 
 	_, ok := any(t.t).(*template.Template)
 	if ok {
-		te := template.New("parser")
+		te := template.New("")
 		_, err := te.Parse(body)
 		if err != nil {
 			return err
@@ -133,7 +133,7 @@ func NewApp() *cli.App {
 
 					} else {
 
-						te := NewTemplate(template.New("live_template"))
+						te := NewTemplate(template.New(""))
 						return runServer(ctx, te)
 					}
 				},
