@@ -40,6 +40,7 @@ type Template[T templateEngines] struct {
 
 func (t *Template[T]) Execute(wr io.Writer, in any) error {
 	if v, ok := any(t.t).(*template.Template); ok {
+
 		if err := v.Execute(wr, in); err != nil {
 			return err
 		}
@@ -77,7 +78,7 @@ func (t *Template[T]) Parse(body string) error {
 		return nil
 	}
 
-	in := bytes.NewBuffer(t.body)
+	in := bytes.NewBuffer([]byte{})
 	if _, err := io.Copy(in, strings.NewReader(body)); err != nil {
 		return err
 	}
