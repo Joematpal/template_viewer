@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io"
 	"log"
-	"time"
 
 	"fmt"
 	"html/template"
@@ -15,11 +14,16 @@ import (
 	"regexp"
 	"strings"
 
+	_ "embed"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
 	"github.com/osteele/liquid"
 	cli "github.com/urfave/cli/v2"
 )
+
+//go:embed template_viewer.html
+var bt []byte
 
 var (
 	re                 = regexp.MustCompile(`\d%`)
@@ -53,7 +57,7 @@ func (w *Watcher) Remove(name string) error {
 }
 
 func (w *Watcher) WatchList() []string {
-	return w.WatchList()
+	return w.w.WatchList()
 }
 
 func (w *Watcher) Events() chan fsnotify.Event {
@@ -166,6 +170,9 @@ func NewApp() *cli.App {
 						Name:  "host",
 						Value: "0.0.0.0",
 					},
+					&cli.StringFlag{
+						Name: "base-template",
+					},
 				},
 				Action: func(ctx *cli.Context) error {
 					wfs, err := fsnotify.NewWatcher()
@@ -221,11 +228,15 @@ func runServer[T templateEngines](ctx *cli.Context, templateEngine *Template[T],
 		serveWs(watcher, w, r)
 	})
 	srvr.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		vt := bt
+		var err error
+		if s := ctx.String("base-template"); s != "" {
 
-		vt, err := os.ReadFile("template_viewer.html")
-		if err != nil {
-			http.Redirect(w, r, `/?error="`+err.Error()+`"`, http.StatusOK)
-			return
+			vt, err = os.ReadFile(s)
+			if err != nil {
+				http.Redirect(w, r, `/?error="`+err.Error()+`"`, http.StatusOK)
+				return
+			}
 		}
 		if err := watcher.Add("template_viewer.html"); err != nil {
 			log.Fatal(fmt.Errorf("watch template viewer"))
@@ -291,25 +302,6 @@ func runServer[T templateEngines](ctx *cli.Context, templateEngine *Template[T],
 
 	return http.ListenAndServe(addr, srvr)
 }
-
-const (
-	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
-
-	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
-
-	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10
-
-	// Maximum message size allowed from peer.
-	maxMessageSize = 512
-)
-
-var (
-	newline = []byte{'\n'}
-	space   = []byte{' '}
-)
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
