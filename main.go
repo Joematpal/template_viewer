@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"log"
+	"time"
 
 	"fmt"
 	"html/template"
@@ -14,6 +15,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/fsnotify/fsnotify"
+	"github.com/gorilla/websocket"
 	"github.com/osteele/liquid"
 	cli "github.com/urfave/cli/v2"
 )
@@ -22,6 +25,44 @@ var (
 	re                 = regexp.MustCompile(`\d%`)
 	ErrWrongConstraint = errors.New("wrong constraint")
 )
+
+type FactoryWatcher interface {
+	Add(name string) error
+	Close() error
+	Remove(name string) error
+	WatchList() []string
+	Events() chan fsnotify.Event
+	Errors() chan error
+}
+
+type Watcher struct {
+	w *fsnotify.Watcher
+}
+
+func (w *Watcher) Add(name string) error {
+
+	return w.w.Add(name)
+}
+
+func (w *Watcher) Close() error {
+	return w.w.Close()
+}
+
+func (w *Watcher) Remove(name string) error {
+	return w.w.Remove(name)
+}
+
+func (w *Watcher) WatchList() []string {
+	return w.WatchList()
+}
+
+func (w *Watcher) Events() chan fsnotify.Event {
+	return w.w.Events
+}
+
+func (w *Watcher) Errors() chan error {
+	return w.w.Errors
+}
 
 type FactoryTemplate interface {
 	Execute(io.Writer, any) error
@@ -127,15 +168,19 @@ func NewApp() *cli.App {
 					},
 				},
 				Action: func(ctx *cli.Context) error {
+					wfs, err := fsnotify.NewWatcher()
+					if err != nil {
+						return err
+					}
 
+					watcher := Watcher{w: wfs}
 					if ctx.String("engine") == "liquid" {
 						te := NewTemplate(liquid.NewEngine())
-						return runServer(ctx, te)
+						return runServer(ctx, te, watcher)
 
 					} else {
-
 						te := NewTemplate(template.New(""))
-						return runServer(ctx, te)
+						return runServer(ctx, te, watcher)
 					}
 				},
 			},
@@ -168,9 +213,13 @@ func percentEscape(b []byte) []byte {
 	return []byte(string(b) + "%")
 }
 
-func runServer[T templateEngines](ctx *cli.Context, templateEngine *Template[T]) error {
+func runServer[T templateEngines](ctx *cli.Context, templateEngine *Template[T], watcher Watcher) error {
+	defer watcher.Close()
 	srvr := http.NewServeMux()
 
+	srvr.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		serveWs(watcher, w, r)
+	})
 	srvr.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
 		vt, err := os.ReadFile("template_viewer.html")
@@ -178,7 +227,9 @@ func runServer[T templateEngines](ctx *cli.Context, templateEngine *Template[T])
 			http.Redirect(w, r, `/?error="`+err.Error()+`"`, http.StatusOK)
 			return
 		}
-
+		if err := watcher.Add("template_viewer.html"); err != nil {
+			log.Fatal(fmt.Errorf("watch template viewer"))
+		}
 		query := r.URL.Query()
 
 		filePath, ok := query["filePath"]
@@ -193,6 +244,11 @@ func runServer[T templateEngines](ctx *cli.Context, templateEngine *Template[T])
 			serveViewer(w, vt, "", errors.New("please provide data in query params"))
 
 			return
+		}
+
+		templateFileName := strings.Trim(strings.TrimSpace(filePath[0]), "\"")
+		if err := watcher.Add(templateFileName); err != nil {
+			log.Fatal(fmt.Errorf("watch template viewer: %s", templateFileName))
 		}
 
 		b, err := os.ReadFile(strings.Trim(strings.TrimSpace(filePath[0]), "\""))
@@ -234,4 +290,62 @@ func runServer[T templateEngines](ctx *cli.Context, templateEngine *Template[T])
 	fmt.Println("listening on:", addr)
 
 	return http.ListenAndServe(addr, srvr)
+}
+
+const (
+	// Time allowed to write a message to the peer.
+	writeWait = 10 * time.Second
+
+	// Time allowed to read the next pong message from the peer.
+	pongWait = 60 * time.Second
+
+	// Send pings to peer with this period. Must be less than pongWait.
+	pingPeriod = (pongWait * 9) / 10
+
+	// Maximum message size allowed from peer.
+	maxMessageSize = 512
+)
+
+var (
+	newline = []byte{'\n'}
+	space   = []byte{' '}
+)
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
+// serveWs handles websocket requests from the peer.
+func serveWs(watcher Watcher, w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	done := make(chan bool)
+	go func() {
+		defer close(done)
+
+		for {
+			select {
+			case event, ok := <-watcher.Events():
+				if !ok {
+					return
+				}
+				log.Printf("%s %s\n", event.Name, event.Op)
+				if err := conn.WriteMessage(websocket.TextMessage, []byte(event.Op.String())); err != nil {
+					log.Println(err)
+					return
+				}
+			case err, ok := <-watcher.Errors():
+				if !ok {
+					return
+				}
+				log.Println("error:", err)
+			}
+		}
+
+	}()
+
 }
