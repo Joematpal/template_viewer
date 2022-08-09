@@ -40,7 +40,11 @@ type Template[T templateEngines] struct {
 
 func (t *Template[T]) Execute(wr io.Writer, in any) error {
 	if v, ok := any(t.t).(*template.Template); ok {
-		return v.Execute(wr, in)
+		if err := v.Execute(wr, in); err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	if v, ok := any(t.t).(*liquid.Engine); ok {
@@ -61,10 +65,16 @@ func (t *Template[T]) Execute(wr io.Writer, in any) error {
 
 func (t *Template[T]) Parse(body string) error {
 
-	v, ok := any(t.t).(*template.Template)
+	_, ok := any(t.t).(*template.Template)
 	if ok {
-		_, err := v.Parse(body)
-		return err
+		te := template.New("parser")
+		_, err := te.Parse(body)
+		if err != nil {
+			return err
+		}
+
+		t.t = any(te).(T)
+		return nil
 	}
 
 	in := bytes.NewBuffer(t.body)
@@ -82,6 +92,7 @@ func (t *Template[T]) Lookup(name string) *Template[T] {
 		if te == nil {
 			return t
 		}
+
 		return NewTemplate(any(te).(T))
 	}
 
